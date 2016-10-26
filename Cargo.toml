@@ -1,0 +1,9 @@
+[package]
+name = "chain_spec"
+version = "0.1.0"
+authors = ["keorn <pczaban@gmail.com>"]
+
+[dependencies]
+serde = "0.8"
+serde_json = "0.8"
+serde_derive = "0.8"
