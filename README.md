@@ -22,10 +22,11 @@ Converts Geth proof of work chain spec e.g.
 to Parity one, which should enable the two to connect to each other.
 
 ## Usage
-Rust compiler is needed, you can get one [here](https://www.rustup.rs/).
+Rust nightly compiler is needed, you can get one via [rustup](https://www.rustup.rs/).
 ```
 git clone https://github.com/keorn/parity-spec.git
 cd parity-spec
+rustup default nightly
 cargo run -- geth-spec.json
 ```
 
