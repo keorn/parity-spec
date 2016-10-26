@@ -102,8 +102,8 @@ struct ParitySpec {
 fn main() {
 	/// Read Geth chain spec.
 	let mut args = env::args();
-	let mut path = PathBuf::from(args.next().unwrap());
-	path.push(args.next().expect("No file given."));
+	args.next();
+	let path = PathBuf::from(args.next().expect("No file given."));
 	let mut f = File::open(path).expect("Could not open the file.");
 	let mut s = String::new();
 	f.read_to_string(&mut s).expect("Could not read the file.");
