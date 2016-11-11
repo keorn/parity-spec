@@ -172,7 +172,7 @@ fn main() {
 					pricing: linear_pricing(600, 120)
 				}),
 				Ok(4) => Some(ParityBuiltin {
-					name: "indentity".into(),
+					name: "identity".into(),
 					pricing: linear_pricing(15, 3)
 				}),
 				_ => None,
