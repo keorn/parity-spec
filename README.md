@@ -30,4 +30,4 @@ rustup default nightly
 cargo run -- geth-spec.json
 ```
 
-The resulting spec can be then used in Patity with `parity --chain parity-spec.json`.
+The resulting spec can be then used in Parity with `parity --chain parity-spec.json`.
