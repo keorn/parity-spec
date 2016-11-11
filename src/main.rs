@@ -98,17 +98,21 @@ struct ParitySpec {
 	accounts: Map<String, ParityAccount>
 }
 
-
-fn main() {
+fn get_path() -> PathBuf {
 	/// Read Geth chain spec.
 	let mut args = env::args();
 	args.next();
-	let path = PathBuf::from(args.next().expect("No file given."));
+	PathBuf::from(args.next().expect("No file given."))
+}
+
+fn read_file(path: PathBuf) -> String {
 	let mut f = File::open(path).expect("Could not open the file.");
 	let mut s = String::new();
 	f.read_to_string(&mut s).expect("Could not read the file.");
-	let geth_spec: GethSpec = serde_json::from_str(&s).expect("Invalid JSON file.");
+	s
+}
 
+fn ask() -> (String, String) {
 	/// Ask for additional info which Geth does not include in the file.
 	println!("Please enter Geth's --networkid option value (default 0):");
 	let mut network_id = String::new();
@@ -120,6 +124,10 @@ fn main() {
 	io::stdin().read_line(&mut start_nonce).expect("Could not read.");
 	let start_nonce = start_nonce.trim().parse::<u64>().map(|n| format!("0x{:X}", n)).unwrap_or("0x0".into());
 
+	(network_id, start_nonce)
+}
+
+fn translate(geth_spec: GethSpec, network_id: String, start_nonce: String) -> ParitySpec {
 	/// Construct Parity chain spec.
 	let parity_ethash = ParityEthash {
 		gasLimitBoundDivisor: "0x400".into(),
@@ -178,13 +186,30 @@ fn main() {
 				_ => None,
 			}})).collect();
 
-	let parity_spec = ParitySpec {
+	ParitySpec {
 		name: "GethTranslation".into(),
 		engine: engine,
 		params: parity_params,
 		genesis: parity_genesis,
 		accounts: parity_accounts
-	};
+	}
+}
+
+fn main() {
+	let file_str = read_file(get_path());
+	let geth_spec = serde_json::from_str(&file_str).expect("Invalid JSON file.");
+	let (network_id, start_nonce) = ask();
+	let parity_spec = translate(geth_spec, network_id, start_nonce);
 	let serialized = serde_json::to_string_pretty(&parity_spec).expect("Could not serialize");
 	println!("{}", serialized);
+}
+
+#[test]
+fn check_translator() {
+	let geth_str = read_file(PathBuf::from("example-geth.json"));
+	let geth_spec = serde_json::from_str(&geth_str).expect("Invalid JSON file.");
+	let parity_spec = translate(geth_spec, "0x0".into(), "0x0".into());
+	let serialized = serde_json::to_string_pretty(&parity_spec).expect("Could not serialize");
+	println!("{}", serialized);
+	assert_eq!(serialized, read_file(PathBuf::from("example-parity.json")));
 }
