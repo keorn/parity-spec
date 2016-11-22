@@ -13,10 +13,20 @@ use std::io::prelude::*;
 use std::io;
 use std::fs::File;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct GethAccount {
 	balance: Option<String>,
 	wei: Option<String>
+}
+
+#[derive(Deserialize)]
+struct GethConfig {
+	chainId: u64,
+	homesteadBlock: u64,
+	eip150Block: u64,
+	eip155Block: u64,
+	eip158Block: u64,
+	eip160Block: u64
 }
 
 #[derive(Deserialize)]
@@ -29,7 +39,8 @@ struct GethSpec {
 	parentHash: String,
 	extraData: String,
 	gasLimit: String,
-	alloc: Map<String, GethAccount>
+	alloc: Map<String, GethAccount>,
+	config: Option<GethConfig>
 }
 
 #[derive(Serialize)]
@@ -38,7 +49,14 @@ struct ParityEthash {
 	minimumDifficulty: String,
 	difficultyBoundDivisor: String,
 	durationLimit: String,
-	blockReward: String
+	blockReward: String,
+	registrar: String,
+	homesteadTransition: u64,
+	eip150Transition: u64,
+	eip155Transition: u64,
+	eip160Transition: u64,
+	eip161abcTransition: u64,
+	eip161dTransition: u64
 }
 
 #[derive(Serialize)]
@@ -46,7 +64,7 @@ struct ParityParams {
 	accountStartNonce: String,
 	maximumExtraDataSize: String,
 	minGasLimit: String,
-	networkID: String
+	networkID: u64
 }
 
 #[derive(Serialize)]
@@ -84,7 +102,8 @@ struct ParityBuiltin {
 #[derive(Serialize)]
 struct ParityAccount {
 	balance: String,
-	nonce: String,
+	#[serde(skip_serializing_if="Option::is_none")]
+	nonce: Option<String>,
 	#[serde(skip_serializing_if="Option::is_none")]
 	builtin: Option<ParityBuiltin>
 }
@@ -112,39 +131,83 @@ fn read_file(path: PathBuf) -> String {
 	s
 }
 
-fn ask() -> (String, String) {
+fn ask_network_id() -> u64 {
 	/// Ask for additional info which Geth does not include in the file.
 	println!("Please enter Geth's --networkid option value (default 0):");
 	let mut network_id = String::new();
 	io::stdin().read_line(&mut network_id).expect("Could not read.");
-	let network_id = network_id.trim().parse::<u64>().map(|n| format!("0x{:X}", n)).unwrap_or("0x0".into());
+	network_id.trim().parse::<u64>().expect("Could not parse")
+}
 
+fn ask_start_nonce() -> Option<String> {
 	println!("Please enter the start nonce (used for replay protection, default 0):");
 	let mut start_nonce = String::new();
 	io::stdin().read_line(&mut start_nonce).expect("Could not read.");
-	let start_nonce = start_nonce.trim().parse::<u64>().map(|n| format!("0x{:X}", n)).unwrap_or("0x0".into());
-
-	(network_id, start_nonce)
+	start_nonce.trim().parse::<u64>().map(|n| format!("0x{:X}", n)).ok()
 }
 
-fn translate(geth_spec: GethSpec, network_id: String, start_nonce: String) -> ParitySpec {
+fn builtin_from_address(address: String) -> Option<ParityBuiltin> {
+	let mut address = address;
+	if address.starts_with("0x") {
+		address = address[2..].into();
+	}
+	match u64::from_str_radix(&address, 16) {
+		Ok(1) => Some(ParityBuiltin {
+			name: "ecrecover".into(),
+			pricing: linear_pricing(3000, 0)
+		}),
+		Ok(2) => Some(ParityBuiltin {
+			name: "sha256".into(),
+			pricing: linear_pricing(60, 12)
+		}),
+		Ok(3) => Some(ParityBuiltin {
+			name: "ripemd160".into(),
+			pricing: linear_pricing(600, 120)
+		}),
+		Ok(4) => Some(ParityBuiltin {
+			name: "identity".into(),
+			pricing: linear_pricing(15, 3)
+		}),
+		_ => None,
+	}
+}
+
+fn translate(geth_spec: GethSpec) -> ParitySpec {
+	let geth_config = geth_spec.config.unwrap_or_else(|| GethConfig {
+		chainId: ask_network_id(),
+		homesteadBlock: 0,
+		eip150Block: 0,
+		eip155Block: 0,
+		eip158Block: 0,
+		eip160Block: 0
+	});
+
 	/// Construct Parity chain spec.
 	let parity_ethash = ParityEthash {
 		gasLimitBoundDivisor: "0x400".into(),
 		minimumDifficulty: "0x20000".into(),
 		difficultyBoundDivisor: "0x800".into(),
 		durationLimit: "0xd".into(),
-		blockReward: "0x4563918244F40000".into()
+		blockReward: "0x4563918244F40000".into(),
+		registrar: "0x81a4b044831c4f12ba601adb9274516939e9b8a2".into(),
+		homesteadTransition: geth_config.homesteadBlock,
+		eip150Transition: geth_config.eip150Block,
+		eip155Transition: geth_config.eip155Block,
+		eip160Transition: geth_config.eip160Block,
+		eip161abcTransition: geth_config.eip160Block,
+		eip161dTransition: geth_config.eip160Block
 	};
 	let mut engine = Map::new();
 	engine.insert("Ethash".into(), Map::new());
 	engine.get_mut("Ethash").unwrap().insert("params".into(), parity_ethash);
 
+	let start_nonce = ask_start_nonce();
+
 	let parity_params = ParityParams {
-		accountStartNonce: start_nonce.clone(),
+		accountStartNonce: start_nonce.clone().unwrap_or("0x0".into()),
 		maximumExtraDataSize: "0x20".into(),
 		minGasLimit: "0x1388".into(),
-		networkID: network_id
+		networkID: geth_config.chainId
 	};
 
 	let mut parity_seal = Map::new();
@@ -162,29 +225,12 @@ fn translate(geth_spec: GethSpec, network_id: String, start_nonce: String) -> Pa
 		gasLimit: geth_spec.gasLimit
 	};
 
-	let parity_accounts = geth_spec.alloc.into_iter().map(|(address, acc)|
+	let parity_accounts = geth_spec.alloc.into_iter().map(|(address, acc)| {
 		(address.clone(), ParityAccount {
 			balance: acc.balance.clone().unwrap_or_else(|| acc.wei.clone().expect("Each account has to have balance.")),
 			nonce: start_nonce.clone(),
-			builtin: match address.parse::<u8>() {
-				Ok(1) => Some(ParityBuiltin {
-					name: "ecrecover".into(),
-					pricing: linear_pricing(3000, 0)
-				}),
-				Ok(2) => Some(ParityBuiltin {
-					name: "sha256".into(),
-					pricing: linear_pricing(60, 12)
-				}),
-				Ok(3) => Some(ParityBuiltin {
-					name: "ripemd160".into(),
-					pricing: linear_pricing(600, 120)
-				}),
-				Ok(4) => Some(ParityBuiltin {
-					name: "identity".into(),
-					pricing: linear_pricing(15, 3)
-				}),
-				_ => None,
-			}})).collect();
+			builtin: builtin_from_address(address.clone())
+		})}).collect();
 
 	ParitySpec {
 		name: "GethTranslation".into(),
@@ -198,18 +244,7 @@ fn translate(geth_spec: GethSpec, network_id: String, start_nonce: String) -> Pa
 fn main() {
 	let file_str = read_file(get_path());
 	let geth_spec = serde_json::from_str(&file_str).expect("Invalid JSON file.");
-	let (network_id, start_nonce) = ask();
-	let parity_spec = translate(geth_spec, network_id, start_nonce);
+	let parity_spec = translate(geth_spec);
 	let serialized = serde_json::to_string_pretty(&parity_spec).expect("Could not serialize");
 	println!("{}", serialized);
-}
-
-#[test]
-fn check_translator() {
-	let geth_str = read_file(PathBuf::from("example-geth.json"));
-	let geth_spec = serde_json::from_str(&geth_str).expect("Invalid JSON file.");
-	let parity_spec = translate(geth_spec, "0x0".into(), "0x0".into());
-	let serialized = serde_json::to_string_pretty(&parity_spec).expect("Could not serialize");
-	println!("{}", serialized);
-	assert_eq!(serialized, read_file(PathBuf::from("example-parity.json")));
 }
