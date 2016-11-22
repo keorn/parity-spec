@@ -20,6 +20,7 @@ Converts Geth proof of work chain spec e.g.
 }
 ```
 to Parity one, which should enable the two to connect to each other.
+For best effects use the "config" field in Geth spec as seen in the [Ropsten testnet spec](https://dl.dropboxusercontent.com/u/4270001/testnet_genesis.json).
 
 ## Usage
 Rust nightly compiler is needed, you can get one via [rustup](https://www.rustup.rs/).
