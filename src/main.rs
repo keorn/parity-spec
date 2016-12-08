@@ -175,11 +175,11 @@ fn builtin_from_address(address: String) -> Option<ParityBuiltin> {
 fn translate(geth_spec: GethSpec) -> ParitySpec {
 	let geth_config = geth_spec.config.unwrap_or_else(|| GethConfig {
 		chainId: ask_network_id(),
-		homesteadBlock: 0,
-		eip150Block: 0,
-		eip155Block: 0,
-		eip158Block: 0,
-		eip160Block: 0
+		homesteadBlock: 9223372036854775807,
+		eip150Block: 9223372036854775807,
+		eip155Block: 9223372036854775807,
+		eip158Block: 9223372036854775807,
+		eip160Block: 9223372036854775807
 	});
 
 	/// Construct Parity chain spec.
