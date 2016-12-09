@@ -133,7 +133,7 @@ fn read_file(path: PathBuf) -> String {
 
 fn ask_network_id() -> u64 {
 	/// Ask for additional info which Geth does not include in the file.
-	println!("Please enter Geth's --networkid option value (default 0):");
+	println!("Please enter Geth's --networkid option value (required):");
 	let mut network_id = String::new();
 	io::stdin().read_line(&mut network_id).expect("Could not read.");
 	network_id.trim().parse::<u64>().expect("Could not parse")
