@@ -1,14 +1,13 @@
 #![allow(non_snake_case)]
-#![feature(proc_macro)]
 
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 
-use serde_json::Map;
 use std::env;
 use std::path::PathBuf;
+use std::collections::BTreeMap as Map;
 use std::io::prelude::*;
 use std::io;
 use std::fs::File;
