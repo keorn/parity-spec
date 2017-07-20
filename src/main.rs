@@ -63,7 +63,8 @@ struct ParityParams {
 	accountStartNonce: String,
 	maximumExtraDataSize: String,
 	minGasLimit: String,
-	networkID: u64
+	networkID: u64,
+	eip98Transition: u64,
 }
 
 #[derive(Serialize)]
@@ -178,7 +179,7 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 		eip150Block: 9223372036854775807,
 		eip155Block: 9223372036854775807,
 		eip158Block: 9223372036854775807,
-		eip160Block: 9223372036854775807
+		eip160Block: 9223372036854775807,
 	});
 
 	/// Construct Parity chain spec.
@@ -194,7 +195,7 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 		eip155Transition: geth_config.eip155Block,
 		eip160Transition: geth_config.eip160Block,
 		eip161abcTransition: geth_config.eip160Block,
-		eip161dTransition: geth_config.eip160Block
+		eip161dTransition: geth_config.eip160Block,
 	};
 	let mut engine = Map::new();
 	engine.insert("Ethash".into(), Map::new());
@@ -207,6 +208,7 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 		maximumExtraDataSize: "0x20".into(),
 		minGasLimit: "0x1388".into(),
 		networkID: geth_config.chainId.unwrap_or_else(ask_network_id),
+		eip98Transition: 9223372036854775807,
 	};
 
 	let mut parity_seal = Map::new();
@@ -221,7 +223,7 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 		timestamp: geth_spec.timestamp,
 		parentHash: geth_spec.parentHash,
 		extraData: geth_spec.extraData,
-		gasLimit: geth_spec.gasLimit
+		gasLimit: geth_spec.gasLimit,
 	};
 
 	let parity_accounts = geth_spec.alloc.into_iter().map(|(address, acc)| {
