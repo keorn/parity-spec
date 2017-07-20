@@ -20,7 +20,7 @@ struct GethAccount {
 
 #[derive(Deserialize)]
 struct GethConfig {
-	chainId: u64,
+	chainId: Option<u64>,
 	homesteadBlock: u64,
 	eip150Block: u64,
 	eip155Block: u64,
@@ -173,7 +173,7 @@ fn builtin_from_address(address: String) -> Option<ParityBuiltin> {
 
 fn translate(geth_spec: GethSpec) -> ParitySpec {
 	let geth_config = geth_spec.config.unwrap_or_else(|| GethConfig {
-		chainId: ask_network_id(),
+		chainId: None,
 		homesteadBlock: 9223372036854775807,
 		eip150Block: 9223372036854775807,
 		eip155Block: 9223372036854775807,
@@ -206,7 +206,7 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 		accountStartNonce: start_nonce.clone().unwrap_or("0x0".into()),
 		maximumExtraDataSize: "0x20".into(),
 		minGasLimit: "0x1388".into(),
-		networkID: geth_config.chainId
+		networkID: geth_config.chainId.unwrap_or_else(ask_network_id),
 	};
 
 	let mut parity_seal = Map::new();
