@@ -22,7 +22,7 @@ struct GethAccount {
 struct GethConfig {
 	chainId: Option<u64>,
 	homesteadBlock: u64,
-	eip150Block: u64,
+	eip150Block: Option<u64>,
 	eip155Block: u64,
 	eip158Block: u64,
 	eip160Block: u64
@@ -176,7 +176,7 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 	let geth_config = geth_spec.config.unwrap_or_else(|| GethConfig {
 		chainId: None,
 		homesteadBlock: 9223372036854775807,
-		eip150Block: 9223372036854775807,
+		eip150Block: None,
 		eip155Block: 9223372036854775807,
 		eip158Block: 9223372036854775807,
 		eip160Block: 9223372036854775807,
@@ -191,7 +191,7 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 		blockReward: "0x4563918244F40000".into(),
 		registrar: "0x81a4b044831c4f12ba601adb9274516939e9b8a2".into(),
 		homesteadTransition: geth_config.homesteadBlock,
-		eip150Transition: geth_config.eip150Block,
+		eip150Transition: geth_config.eip150Block.unwrap_or(9223372036854775807),
 		eip155Transition: geth_config.eip155Block,
 		eip160Transition: geth_config.eip160Block,
 		eip161abcTransition: geth_config.eip160Block,
