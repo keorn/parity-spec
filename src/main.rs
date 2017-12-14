@@ -24,7 +24,6 @@ struct GethConfig {
 	homesteadBlock: u64,
 	eip150Block: Option<u64>,
 	eip155Block: u64,
-	eip158Block: u64,
 	eip160Block: u64
 }
 
@@ -49,10 +48,8 @@ struct ParityEthash {
 	difficultyBoundDivisor: String,
 	durationLimit: String,
 	blockReward: String,
-	registrar: String,
 	homesteadTransition: u64,
 	eip150Transition: u64,
-	eip155Transition: u64,
 	eip160Transition: u64,
 	eip161abcTransition: u64,
 	eip161dTransition: u64
@@ -60,11 +57,12 @@ struct ParityEthash {
 
 #[derive(Serialize)]
 struct ParityParams {
+	registrar: String,
+	eip155Transition: u64,
 	accountStartNonce: String,
 	maximumExtraDataSize: String,
 	minGasLimit: String,
-	networkID: u64,
-	eip98Transition: u64,
+	networkID: u64
 }
 
 #[derive(Serialize)]
@@ -178,7 +176,6 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 		homesteadBlock: 9223372036854775807,
 		eip150Block: None,
 		eip155Block: 9223372036854775807,
-		eip158Block: 9223372036854775807,
 		eip160Block: 9223372036854775807,
 	});
 
@@ -189,10 +186,8 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 		difficultyBoundDivisor: "0x800".into(),
 		durationLimit: "0xd".into(),
 		blockReward: "0x4563918244F40000".into(),
-		registrar: "0x81a4b044831c4f12ba601adb9274516939e9b8a2".into(),
 		homesteadTransition: geth_config.homesteadBlock,
 		eip150Transition: geth_config.eip150Block.unwrap_or(0),
-		eip155Transition: geth_config.eip155Block,
 		eip160Transition: geth_config.eip160Block,
 		eip161abcTransition: geth_config.eip160Block,
 		eip161dTransition: geth_config.eip160Block,
@@ -204,11 +199,12 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 	let start_nonce = ask_start_nonce();
 
 	let parity_params = ParityParams {
+		registrar: "0x81a4b044831c4f12ba601adb9274516939e9b8a2".into(),
+		eip155Transition: geth_config.eip155Block,
 		accountStartNonce: start_nonce.clone().unwrap_or("0x0".into()),
 		maximumExtraDataSize: "0x20".into(),
 		minGasLimit: "0x1388".into(),
-		networkID: geth_config.chainId.unwrap_or_else(ask_network_id),
-		eip98Transition: 9223372036854775807,
+		networkID: geth_config.chainId.unwrap_or_else(ask_network_id)
 	};
 
 	let mut parity_seal = Map::new();
