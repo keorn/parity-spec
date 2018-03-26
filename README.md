@@ -30,5 +30,7 @@ git clone https://github.com/keorn/parity-spec.git
 cd parity-spec
 cargo run -- geth-spec.json
 ```
+Where `geth-spec.json` is your Geth spec file.
+The resulting converted file will be printed to the console, then you can save it as json file (for example `parity-spec.json`).
 
 The resulting spec can be then used in Parity with `parity --chain parity-spec.json`.
