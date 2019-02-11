@@ -44,7 +44,6 @@ struct GethSpec {
 
 #[derive(Serialize)]
 struct ParityEthash {
-	gasLimitBoundDivisor: String,
 	minimumDifficulty: String,
 	difficultyBoundDivisor: String,
 	durationLimit: String,
@@ -65,6 +64,7 @@ struct ParityParams {
 	minGasLimit: String,
 	networkID: u64,
 	eip98Transition: u64,
+	gasLimitBoundDivisor: String,
 }
 
 #[derive(Serialize)]
@@ -184,7 +184,6 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 
 	/// Construct Parity chain spec.
 	let parity_ethash = ParityEthash {
-		gasLimitBoundDivisor: "0x400".into(),
 		minimumDifficulty: "0x20000".into(),
 		difficultyBoundDivisor: "0x800".into(),
 		durationLimit: "0xd".into(),
@@ -209,6 +208,7 @@ fn translate(geth_spec: GethSpec) -> ParitySpec {
 		minGasLimit: "0x1388".into(),
 		networkID: geth_config.chainId.unwrap_or_else(ask_network_id),
 		eip98Transition: 9223372036854775807,
+		gasLimitBoundDivisor: "0x400".into(),
 	};
 
 	let mut parity_seal = Map::new();

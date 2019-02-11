@@ -3,11 +3,17 @@
   "engine": {
     "Ethash": {
       "params": {
-        "gasLimitBoundDivisor": "0x400",
         "minimumDifficulty": "0x20000",
         "difficultyBoundDivisor": "0x800",
         "durationLimit": "0xd",
-        "blockReward": "0x4563918244F40000"
+        "blockReward": "0x4563918244F40000",
+        "registrar": "0x81a4b044831c4f12ba601adb9274516939e9b8a2",
+        "homesteadTransition": 9223372036854775807,
+        "eip150Transition": 0,
+        "eip155Transition": 9223372036854775807,
+        "eip160Transition": 9223372036854775807,
+        "eip161abcTransition": 9223372036854775807,
+        "eip161dTransition": 9223372036854775807
       }
     }
   },
@@ -15,20 +21,22 @@
     "accountStartNonce": "0x0",
     "maximumExtraDataSize": "0x20",
     "minGasLimit": "0x1388",
-    "networkID": "0x0"
+    "networkID": 0,
+    "eip98Transition": 9223372036854775807,
+    "gasLimitBoundDivisor": "0x400"
   },
   "genesis": {
     "seal": {
       "ethereum": {
-        "nonce": "0x0000000000000042",
+        "nonce": "0x0000000000000000",
         "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
       }
     },
     "difficulty": "0x400",
-    "author": "0x3333333333333333333333333333333333333333",
+    "author": "0x0000000000000000000000000000000000000000",
     "timestamp": "0x0",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "extraData": "0x0",
+    "extraData": "",
     "gasLimit": "0x8000000"
   },
   "accounts": {
