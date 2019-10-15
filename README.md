@@ -1,3 +1,5 @@
+> Code in this repo has not been tested in a while, so it may not work with latest versions of Parity and Geth. Feel free to submit a PR if you identify fixes.
+
 Converts Geth proof of work chain spec e.g.
 ```
 {
